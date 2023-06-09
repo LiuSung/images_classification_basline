@@ -96,6 +96,7 @@ def main(args):
     epochs = args.epochs
 
     train_steps = len(train_loader)
+    val_steps = len(val_loader)
     for epoch in range(epochs):
         # train
         net.train()
@@ -119,12 +120,15 @@ def main(args):
         # validate
         net.eval()
         acc = 0.0  # accumulate accurate number / epoch
+        val_loss_t = 0.0
         with torch.no_grad():
             val_bar = tqdm(val_loader, file=sys.stdout)
             for val_data in val_bar:
                 val_images, val_labels = val_data
                 outputs = net(val_images.to(device))
-                # loss = loss_function(outputs, test_labels)
+                val_loss = loss_function(outputs, val_labels.to(device))
+                val_loss_t += val_loss.item()
+
                 predict_y = torch.max(outputs, dim=1)[1]
                 acc += torch.eq(predict_y, val_labels.to(device)).sum().item()
 
@@ -132,8 +136,8 @@ def main(args):
                                                            epochs)
 
         val_accurate = acc / len(val_dataset)
-        print('[epoch %d] train_loss: %.3f  val_accuracy: %.3f' %
-              (epoch + 1, running_loss / train_steps, val_accurate))
+        print('[epoch %d] train_loss: %.3f val_loss: %.3f val_accuracy: %.3f' %
+              (epoch + 1, running_loss / train_steps, val_loss_t /val_steps, val_accurate))
         torch.save(net.state_dict(), './weights/best_model-{}.pth'.format(epoch))
         # if val_accurate > best_acc:
         #     best_acc = val_accurate
