@@ -7,18 +7,18 @@ from tqdm import tqdm
 import torch.optim as optim
 from torchvision import transforms
 import torchvision.models as models
-import timm
+# import timm
 from my_dataset import MyDataSet
 from utils import read_split_data
-from pprint import pprint
+# from pprint import pprint
 
 class SVHN_Model2(nn.Module):
     def __init__(self):
         super(SVHN_Model2, self).__init__()
 
 
-        model_conv = timm.create_model('resnext101_32x8d', pretrained=True)
-        # model_conv = models.resnext101_32x8d(pretrained=True)
+        # model_conv = timm.create_model('resnext101_32x8d', pretrained=True)
+        model_conv = models.resnext101_32x8d(pretrained=True)
         fc_infeatures = model_conv.fc.in_features
         model_conv.avgpool = nn.AdaptiveAvgPool2d(1)
         model_conv = nn.Sequential(*list(model_conv.children())[:-1])  # 去除最后一个fc layer
@@ -87,6 +87,8 @@ def main(args):
                                              num_workers=nw,
                                              collate_fn=val_dataset.collate_fn)
     net = SVHN_Model2()
+    checkpoint = torch.load('resnet18_checkpoint.pth') ##模型权重
+    net.load_state_dict(checkpoint)
     net.to(device)
 
     ##定义超参数
@@ -147,8 +149,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    model_names = timm.list_models(pretrained=True)
-    pprint(model_names)
+    # model_names = timm.list_models(pretrained=True)
+    # pprint(model_names)
 
     parser = argparse.ArgumentParser()
 
