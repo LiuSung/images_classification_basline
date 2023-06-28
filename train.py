@@ -87,6 +87,7 @@ def main(args):
                                              num_workers=nw,
                                              collate_fn=val_dataset.collate_fn)
     net = SVHN_Model2()
+    # model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=10)
     checkpoint = torch.load('resnet18_checkpoint.pth') ##模型权重
     net.load_state_dict(checkpoint)
     net.to(device)
