@@ -6,7 +6,7 @@ from PIL import Image
 import pandas as pd
 import glob
 import torch.nn as nn
-# from torchvision import models
+from torchvision import models
 import timm
 from tqdm import tqdm
 
@@ -25,7 +25,7 @@ class SVHN_Model2(nn.Module):
         super(SVHN_Model2, self).__init__()
 
         # resnet18
-        model_conv = timm.create_model('resnext101_32x8d', pretrained=True)
+        model_conv = models.resnext101_32x8d(pretrained=True)
         fc_infeatures = model_conv.fc.in_features
         model_conv.avgpool = nn.AdaptiveAvgPool2d(1)
         model_conv = nn.Sequential(*list(model_conv.children())[:-1])  # 去除最后一个fc layer
