@@ -18,6 +18,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data.dataset import Dataset
 
+
 ## 定义模型
 class SVHN_Model2(nn.Module):
     def __init__(self):
@@ -60,16 +61,21 @@ class QRDataset(Dataset):
     def __len__(self):
         return len(self.train_jpg)
 
-## 加载数据
-train_jpg = np.array(glob.glob('data-nong/train/*/*.jpg'))
 def main(args):
     ## 十折交叉验证
+    train_jpg = np.array(glob.glob(args.data_path+'/*/*.jpg'))
     skf = KFold(n_splits=5, random_state=334, shuffle=True)
     for flod_idx, (train_idx, val_idx) in enumerate(skf.split(train_jpg)):
         train_loader = torch.utils.data.DataLoader(
             QRDataset(train_jpg[train_idx],
                   transforms.Compose([
+                      # transforms.RandomGrayscale(),
                       transforms.Resize((224, 224)),
+                      # transforms.RandomAffine(10),
+                      # transforms.ColorJitter(hue=.05, saturation=.05),
+                      # transforms.RandomCrop((450, 450)),
+                      # transforms.RandomHorizontalFlip(),
+                      # transforms.RandomVerticalFlip(),
                       transforms.ToTensor(),
                       transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                   ])
@@ -79,6 +85,9 @@ def main(args):
             QRDataset(train_jpg[val_idx],
                   transforms.Compose([
                       transforms.Resize((224, 224)),
+                      # transforms.Resize((124, 124)),
+                      # transforms.RandomCrop((450, 450)),
+                      # transforms.RandomCrop((88, 88)),
                       transforms.ToTensor(),
                       transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                   ])
@@ -112,7 +121,7 @@ def main(args):
             # print statistics
                 running_loss += loss.item()
 
-                train_bar.desc = "train epoch[{}/{}] loss:{:.3f}".format(epoch + 1,
+                train_bar.desc = "fold{} train epoch[{}/{}] loss:{:.3f}".format(flod_idx+1 ,epoch + 1,
                                                                      epochs,
                                                                      loss)
             scheduler.step()
