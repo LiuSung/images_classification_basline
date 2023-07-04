@@ -25,6 +25,7 @@ class SVHN_Model2(nn.Module):
         super(SVHN_Model2, self).__init__()
 
         # resnet18
+        # model_conv = timm.create_model('resnext101_32x8d', pretrained=True)
         model_conv = models.resnet50(pretrained=True)
         fc_infeatures = model_conv.fc.in_features
         model_conv.avgpool = nn.AdaptiveAvgPool2d(1)
