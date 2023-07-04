@@ -53,53 +53,47 @@ def normal(src):
                 aug_image_pil = transforms.ToPILImage()(aug_image)
                 aug_image_pil.save(save_path)
 
-## 灰度图应用直方图均衡化
-def equalized(src):
-    all_items = os.listdir(src)  # data/train/
-    for i in tqdm(range(len(all_items))):
-        data_dir = src + all_items[i]
-        imgs_names = glob.glob(data_dir + '/*.jpg')
-        count = 0
-        for j in range(len(imgs_names)):
-            img = cv2.imread(imgs_names[i])
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-            # 应用直方图均衡化
-            equalized = cv2.equalizeHist(gray)
-            count += 1
-            cv2.imwrite("data/train/"+all_items[i]+"/equalized"+str(count)+".jpg", equalized)
-    # # 显示原始图像和增强后的图像
-    # fig, ax = plt.subplots(1,2 , figsize=(10, 5))
-    # ax[0].imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    # ax[0].set_title('Original Image')
-    # ax[0].axis('off')
+# 随机擦除
+def random_erase(img, n_holes, length, rate):  # 输入img为PIL图片格式的图片
+    if np.random.rand(1)[0] < rate:
+        img = np.array(img)
+        h = img.shape[0]  # 图片的高
+        w = img.shape[1]  # 图片的宽
 
+        n_holes = np.random.randint(n_holes)
+        mask = np.ones((h, w), np.float32)  # 32*32w*h的全1矩阵
 
-    # ax[1].imshow(equalized, cmap='gray')
-    # ax[1].set_title('denoised Image')
-    # ax[1].axis('off')
+        for n in range(n_holes):  # n_holes=2,length=4 选择2个区域；每个区域的边长为4
+            y = np.random.randint(h)  # 0~31随机选择一个数 y=4
+            x = np.random.randint(w)  # 0~31随机选择一个数 x=24
 
-    # plt.show()
-## 高斯噪声
-def gossimage(src):
-    all_items = os.listdir(src)  # data/train/
-    for i in tqdm(range(len(all_items))):
-        data_dir = src + all_items[i]
-        imgs_names = glob.glob(data_dir + '/*.jpg')
-        count = 0
-        for j in range(len(imgs_names)):
-            img = cv2.imread(imgs_names[i],cv2.COLOR_BGR2GRAY)
-            # 添加高斯噪声
-            mean = 0  # 均值
-            std = 20  # 标准差，控制噪声强度
-            noisy = img + np.random.normal(mean, std, img.shape)
-            noisy = cv2.normalize(noisy, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
-            count += 1
-            cv2.imwrite("data/train/"+all_items[i]+"/goss"+str(count)+".jpg", noisy)
+            y1 = np.clip(y - length // 2, 0, h)  # 2,0,32 ->2
+            y2 = np.clip(y + length // 2, 0, h)  # 6,0,32 ->6
+            x1 = np.clip(x - length // 2, 0, w)  # 24-2,0,32 ->22
+            x2 = np.clip(x + length // 2, 0, w)  # 24+2,0,32 ->26
+
+            mask[y1: y2, x1: x2] = 0.  # 将这一小块区域去除
+        img[:, :, 0] = img[:, :, 0] * mask
+        img[:, :, 1] = img[:, :, 1] * mask
+        img[:, :, 2] = img[:, :, 2] * mask
+        return Image.fromarray(img)
+    else:
+        return img
 
 
 
 if __name__ == '__main__':
     normal("data-nong/train/")
-    # equalized("data-nong/train/")
-    # gossimage("data-nong/train/")
+
+    ## random_erase
+    all_items = os.listdir('data-nong/train')
+    for i in tqdm(range(len(all_items))):
+        data_dir = 'data-nong/train/' + all_items[i]
+        imgs_names = glob.glob(data_dir + '/*.jpg')
+        count = 0
+        for j in range(len(imgs_names)):
+            img = Image.open(imgs_names[j]).convert('RGB')
+            img2 = random_erase(img, 150, 3, 1)
+            count += 1
+            img2.save("data/train/" + all_items[i] + "/erase" + str(count) + ".jpg")
