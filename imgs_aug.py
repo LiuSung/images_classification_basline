@@ -81,10 +81,27 @@ def random_erase(img, n_holes, length, rate):  # 输入img为PIL图片格式的�
     else:
         return img
 
+def gossimage(src):
+    all_items = os.listdir(src)  # data/train/
+    for i in tqdm(range(len(all_items))):
+        data_dir = src + all_items[i]
+        imgs_names = glob.glob(data_dir + '/*.jpg')
+        count = 0
+        for j in range(len(imgs_names)):
+            img = cv2.imread(imgs_names[i],cv2.COLOR_BGR2GRAY)
+            # 添加高斯噪声
+            mean = 0  # 均值
+            std = 20  # 标准差，控制噪声强度
+            noisy = img + np.random.normal(mean, std, img.shape)
+            noisy = cv2.normalize(noisy, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+            count += 1
+            cv2.imwrite("data/train/"+all_items[i]+"/goss"+str(count)+".jpg", noisy)
+
 
 
 if __name__ == '__main__':
     normal("data-nong/train/")
+    gossimage("data-nong/train/")
 
     ## random_erase
     all_items = os.listdir('data-nong/train')
