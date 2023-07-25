@@ -100,6 +100,11 @@ def label_smooth(label_onehot, epsilon=0.1):
     smooth_label_onehot = (1 - epsilon) * label_onehot + epsilon / n_classes
     return smooth_label_onehot
 
+def add_gaussian_noise(img_tensor, mean=0.0, std=1.0, p=0.2):
+    noise = torch.randn(img_tensor.size()) * std + mean
+    noisy_img_tensor = img_tensor + noise
+    return noisy_img_tensor if torch.rand(1) < p else img_tensor
+
 
 class MyDataSet2(Dataset):
     """自定义数据集"""

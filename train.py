@@ -7,7 +7,7 @@ from tqdm import tqdm
 import torch.optim as optim
 from torchvision import transforms
 import timm
-from my_dataset import MyDataSet
+from my_dataset import MyDataSet,random_erase,add_gaussian_noise
 from utils import read_split_data
 import numpy as np
 from sklearn.model_selection import KFold
@@ -88,7 +88,12 @@ def main(args):
         "train": transforms.Compose([transforms.Resize((img_size, img_size)),
                                      transforms.RandomHorizontalFlip(p=0.5),
                                      transforms.RandomVerticalFlip(p=0.5),
+                                     transforms.RandomApply([transforms.RandomRotation(20)], p=0.3),
+                                     transforms.RandomApply([transforms.ColorJitter(brightness=0.4, contrast=0.3,
+                                                                                    saturation=0.2, hue=0.3)], p=0.3),
+                                     transforms.Lambda(lambda x: random_erase(x, n_holes=100, length=3, p=0.3)),
                                      transforms.ToTensor(),
+                                     transforms.Lambda(lambda x: add_gaussian_noise(x, mean=0.0, std=0.5, p=0.2)),
                                      transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]),
         "val": transforms.Compose([transforms.Resize((img_size, img_size)),
                                    transforms.ToTensor(),
